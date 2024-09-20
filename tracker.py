@@ -28,31 +28,26 @@ def get_projects_from_db():
 def get_updates():
     return
 
-def insert_new_project(project_name, date, org):
+def execute_query(query, params) -> bool:
     connection = sqlite3.connect('tracker.db')
     cursor = connection.cursor()
-    query = f"""INSERT INTO tracker (project_name,date,org) VALUES ('{project_name}', '{date}', '{org}')"""
-    cursor.execute(query)
+    cursor.execute(query, params)
     connection.commit()
     connection.close()
+    return True
 
-def update_project_date(project_name, date):
-    connection = sqlite3.connect('tracker.db')
-    cursor = connection.cursor()
-    query = f"""UPDATE tracker
-    date = {date}
-    WHERE project_name = {project_name}
-    """
+def insert_new_project(project_name: str, date: str, org: str) -> bool:
+    query = f"""INSERT INTO tracker (project_name,date,org) VALUES (?, ?, ?)"""
+    params = (project_name, date, org)
+    return execute_query(query, params)
 
-def purge_db():
-    connection = sqlite3.connect('tracker.db')
-    cursor = connection.cursor()
-    query = "DELETE FROM tracker"
-    cursor.execute(query)
-    connection.commit()
-    connection.close()
-    return "Tracker table successfully purged"
+def update_project_date(project_name: str, date: str) -> bool:
+    query = f"""UPDATE tracker date = ? WHERE project_name = ?"""
+    params = (query, (date, project_name))
+    return execute_query(query, params)
 
-#insert_new_project('test1', 'test2', 'test3')
-
-print(get_projects_from_db())
+def purge_db() -> bool:
+    execute_query("DELETE FROM tracker", ())
+    execute_query("DELETE FROM sqlite_sequence WHERE name='tracker'", ())
+    print("Tracker table successfully purged")
+    return True
